@@ -2,8 +2,12 @@ import Link from 'next/link';
 import React from 'react';
 
 import SearchBarForm from './SearchBarForm';
+import getTeams from '@/app/util/getTeams';
+import { Team } from '@/types';
 
-const SearchBar = () => {
+const SearchBar = async () => {
+  let teamsData: Team[] = await getTeams();
+
   return (
     <div className="flex w-full items-start justify-center p-3">
       <div className="flex w-1/6 items-center justify-center text-neutral-100">
@@ -12,7 +16,7 @@ const SearchBar = () => {
         </Link>
       </div>
       <div className="flex w-4/6 items-center justify-center">
-        <SearchBarForm />
+        <SearchBarForm teamsData={teamsData} />
       </div>
       <div className="w-1/6"></div>
     </div>
