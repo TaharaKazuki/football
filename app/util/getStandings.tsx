@@ -1,9 +1,15 @@
 import 'server-only';
 // import { getMonth, getYear } from 'date-fns';
 
+import getStandingsSample from '../sampleData/getStandingsSample';
+import { USE_SAMPLE } from '../sampleData/useSample';
 import { Standing } from '@/types';
 
 const getStandings = async (): Promise<Standing[]> => {
+  if (USE_SAMPLE) {
+    return getStandingsSample();
+  }
+
   /*
    * free planでは2020〜2022シーズンでしかrequestできないので
    * 一旦、コメントアウト 無念
@@ -17,6 +23,7 @@ const getStandings = async (): Promise<Standing[]> => {
   // } else {
   //   _year = getYear(currentTime);
   // }
+
   const API_KEY: string = process.env.API_KEY as string;
 
   const options = {
