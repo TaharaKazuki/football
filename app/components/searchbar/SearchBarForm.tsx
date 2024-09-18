@@ -1,6 +1,6 @@
+// SearchBarForm.tsx
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   ChangeEvent,
@@ -11,6 +11,7 @@ import {
   useCallback,
 } from 'react';
 
+import ForwardRefLink from '../ForwardRefLink'; // カスタムリンクコンポーネントをインポート
 import { Team } from '@/types';
 
 type SearchBarFormProps = {
@@ -23,7 +24,9 @@ const SearchBarForm = ({ teamsData }: SearchBarFormProps) => {
   const [showFilteredBox, setShowFilteredBox] = useState<boolean>(false);
   const router = useRouter();
   const teamListRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef<(HTMLAnchorElement | null)[]>([]); // 各項目のRefを保持
 
+  // フィルタリング処理をuseMemoで最適化
   const filteredTeams = useMemo(
     () =>
       teamsData.filter((team) =>
@@ -32,6 +35,7 @@ const SearchBarForm = ({ teamsData }: SearchBarFormProps) => {
     [searchTeam, teamsData]
   );
 
+  // イベントハンドラをuseCallbackで最適化
   const handleSearchChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     setSearchTeam(e.target.value);
     setFocusedIndex(-1);
@@ -40,9 +44,10 @@ const SearchBarForm = ({ teamsData }: SearchBarFormProps) => {
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
-      const length = Math.min(filteredTeams.length, 10);
+      const length = filteredTeams.length;
 
       if (event.key === 'ArrowDown') {
+        event.preventDefault();
         setFocusedIndex((prevIndex) =>
           prevIndex < length - 1 ? prevIndex + 1 : prevIndex
         );
@@ -55,12 +60,19 @@ const SearchBarForm = ({ teamsData }: SearchBarFormProps) => {
         const teamId = filteredTeams[focusedIndex].team.id;
         router.push(`/team/${teamId}`);
         setSearchTeam('');
+        setShowFilteredBox(false);
+      } else if (event.key === 'Escape') {
+        // Escapeキーでフィルタリングボックスを閉じる
+        setShowFilteredBox(false);
       }
     },
     [filteredTeams, focusedIndex, router]
   );
 
-  const handleTeamItemClick = useCallback(() => setSearchTeam(''), []);
+  const handleTeamItemClick = useCallback(() => {
+    setSearchTeam('');
+    setShowFilteredBox(false);
+  }, []);
 
   const handleOutsideClick = useCallback((event: MouseEvent) => {
     if (
@@ -77,6 +89,16 @@ const SearchBarForm = ({ teamsData }: SearchBarFormProps) => {
       document.removeEventListener('click', handleOutsideClick);
     };
   }, [handleOutsideClick]);
+
+  // focusedIndexが変更されたときにスクロールを実行
+  useEffect(() => {
+    if (focusedIndex !== -1 && itemRefs.current[focusedIndex]) {
+      itemRefs.current[focusedIndex]?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+      });
+    }
+  }, [focusedIndex]);
 
   const shouldShowFilteredBox =
     searchTeam && filteredTeams.length > 0 && showFilteredBox;
@@ -97,20 +119,26 @@ const SearchBarForm = ({ teamsData }: SearchBarFormProps) => {
       {shouldShowFilteredBox && (
         <div
           ref={teamListRef}
-          className="absolute top-full z-20 flex w-full
-                        max-w-full flex-col bg-black/80"
+          className="absolute top-full z-20 flex w-full max-w-full flex-col overflow-y-auto bg-black/80"
+          style={{ maxHeight: '200px' }} // スクロールを許可する最大の高さを設定
+          role="listbox" // アクセシビリティ向上のためのrole属性
         >
-          {filteredTeams.slice(0, 10).map((standing, i) => (
-            <Link
+          {filteredTeams.map((standing, i) => (
+            <ForwardRefLink
               href={`/team/${standing.team.id}`}
               key={standing.team.id}
+              ref={(el: HTMLAnchorElement | null) => {
+                itemRefs.current[i] = el;
+              }} // Refを<a>タグに割り当て（ブロックボディに変更）
               className={`p-2 text-neutral-100 hover:bg-yellow-100/40 ${
                 i === focusedIndex ? 'bg-yellow-100/40' : ''
               }`}
               onClick={handleTeamItemClick}
+              role="option" // アクセシビリティ向上のためのrole属性
+              aria-selected={i === focusedIndex} // 選択状態を示す属性
             >
               {standing.team.name}
-            </Link>
+            </ForwardRefLink>
           ))}
         </div>
       )}
