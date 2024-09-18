@@ -12,6 +12,7 @@ import {
 
 import { Team } from '@/types';
 import Link from 'next/link';
+import Image from 'next/image';
 
 type SearchBarFormProps = {
   teamsData: Team[];
@@ -123,7 +124,7 @@ const SearchBarForm = ({ teamsData }: SearchBarFormProps) => {
               ref={(el: HTMLAnchorElement | null) => {
                 itemRefs.current[i] = el;
               }}
-              className={`px-3 py-2 text-neutral-100 hover:bg-yellow-100/40 ${
+              className={`flex justify-between px-3 py-2 text-neutral-100 hover:bg-yellow-100/40 ${
                 i === focusedIndex ? 'bg-yellow-100/40' : ''
               }`}
               onClick={handleTeamItemClick}
@@ -131,6 +132,12 @@ const SearchBarForm = ({ teamsData }: SearchBarFormProps) => {
               aria-selected={i === focusedIndex}
             >
               {standing.team.name}
+              <Image
+                src={standing.team.logo}
+                width={30}
+                height={30}
+                alt="team logo"
+              />
             </Link>
           ))}
         </div>
