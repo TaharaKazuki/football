@@ -1,4 +1,3 @@
-// SearchBarForm.tsx
 'use client';
 
 import { useRouter } from 'next/navigation';
@@ -11,8 +10,8 @@ import {
   useCallback,
 } from 'react';
 
-import ForwardRefLink from '../ForwardRefLink'; // カスタムリンクコンポーネントをインポート
 import { Team } from '@/types';
+import Link from 'next/link';
 
 type SearchBarFormProps = {
   teamsData: Team[];
@@ -24,9 +23,8 @@ const SearchBarForm = ({ teamsData }: SearchBarFormProps) => {
   const [showFilteredBox, setShowFilteredBox] = useState<boolean>(false);
   const router = useRouter();
   const teamListRef = useRef<HTMLDivElement>(null);
-  const itemRefs = useRef<(HTMLAnchorElement | null)[]>([]); // 各項目のRefを保持
+  const itemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
 
-  // フィルタリング処理をuseMemoで最適化
   const filteredTeams = useMemo(
     () =>
       teamsData.filter((team) =>
@@ -35,7 +33,6 @@ const SearchBarForm = ({ teamsData }: SearchBarFormProps) => {
     [searchTeam, teamsData]
   );
 
-  // イベントハンドラをuseCallbackで最適化
   const handleSearchChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     setSearchTeam(e.target.value);
     setFocusedIndex(-1);
@@ -60,9 +57,6 @@ const SearchBarForm = ({ teamsData }: SearchBarFormProps) => {
         const teamId = filteredTeams[focusedIndex].team.id;
         router.push(`/team/${teamId}`);
         setSearchTeam('');
-        setShowFilteredBox(false);
-      } else if (event.key === 'Escape') {
-        // Escapeキーでフィルタリングボックスを閉じる
         setShowFilteredBox(false);
       }
     },
@@ -90,7 +84,6 @@ const SearchBarForm = ({ teamsData }: SearchBarFormProps) => {
     };
   }, [handleOutsideClick]);
 
-  // focusedIndexが変更されたときにスクロールを実行
   useEffect(() => {
     if (focusedIndex !== -1 && itemRefs.current[focusedIndex]) {
       itemRefs.current[focusedIndex]?.scrollIntoView({
@@ -120,25 +113,25 @@ const SearchBarForm = ({ teamsData }: SearchBarFormProps) => {
         <div
           ref={teamListRef}
           className="absolute top-full z-20 flex w-full max-w-full flex-col overflow-y-auto bg-black/80"
-          style={{ maxHeight: '200px' }} // スクロールを許可する最大の高さを設定
-          role="listbox" // アクセシビリティ向上のためのrole属性
+          style={{ maxHeight: '200px' }}
+          role="listbox"
         >
           {filteredTeams.map((standing, i) => (
-            <ForwardRefLink
+            <Link
               href={`/team/${standing.team.id}`}
               key={standing.team.id}
               ref={(el: HTMLAnchorElement | null) => {
                 itemRefs.current[i] = el;
-              }} // Refを<a>タグに割り当て（ブロックボディに変更）
-              className={`p-2 text-neutral-100 hover:bg-yellow-100/40 ${
+              }}
+              className={`px-3 py-2 text-neutral-100 hover:bg-yellow-100/40 ${
                 i === focusedIndex ? 'bg-yellow-100/40' : ''
               }`}
               onClick={handleTeamItemClick}
-              role="option" // アクセシビリティ向上のためのrole属性
-              aria-selected={i === focusedIndex} // 選択状態を示す属性
+              role="option"
+              aria-selected={i === focusedIndex}
             >
               {standing.team.name}
-            </ForwardRefLink>
+            </Link>
           ))}
         </div>
       )}
